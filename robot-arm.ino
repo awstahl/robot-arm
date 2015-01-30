@@ -11,43 +11,55 @@ class Joint
     Servo servo;  // Internal control object
     
   public:
-    // TODO: Moar constructors?!?
+    // TODO: Moar constructors?!?  Validation logic?  (Don't use idiotically... it's not a lib yet)
     Joint(int sPin, int interval, int start=90, int minimum=0, int maximum=180)
     {
       pin = sPin;
       home = start;
-//      servo.attach(pin);
-//      goHome();
+      servo.attach(pin);
+      goHome();
       step = interval;
       min = minimum;
       max = maximum;
     }
 
-    void attach()
-    {
-      servo.attach(pin);
-      goHome();
-    }
-    
     void rotate(int amount)
     {
-      servo.write(servo.read() + (amount * step));
-      delay(50);
+      int dest = servo.read() + (step * amount);
+      if (dest > 0)
+      {
+        if (dest <= max)
+        {
+          servo.write(dest);
+        }
+        else
+        {
+          servo.write(max);
+        }
+      }
+      else if (dest < 0)
+      {
+        if (dest >= min)
+        {
+          servo.write(dest);
+        }
+        else
+        {
+          servo.write(min);
+        }
+      }        
     }
     
     void goHome()
     {
       servo.write(home);
     }
-};
-
-Joint* shoulder;
+} *shoulder;
 
 void setup() 
 {
   Serial.begin(115200);
-  shoulder = new Joint(9, 2, 90);
-  shoulder->attach();
+  shoulder = new Joint(9, 5, 105, 75, 135);
 }
 
 int smooth(char c)
@@ -65,6 +77,7 @@ void getInput()
 {
   if (Serial.available())
   {
+    // TODO: Use the char as a lookup index
     switch(Serial.read())
     {
       case 's':
