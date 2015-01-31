@@ -26,28 +26,18 @@ class Joint
     void rotate(int amount)
     {
       int dest = servo.read() + (step * amount);
-      if (dest > 0)
+      if ((dest <= max) && (dest >= min))
       {
-        if (dest <= max)
-        {
-          servo.write(dest);
-        }
-        else
-        {
-          servo.write(max);
-        }
+        servo.write(dest);
       }
-      else if (dest < 0)
+      else if (dest < min)
       {
-        if (dest >= min)
-        {
-          servo.write(dest);
-        }
-        else
-        {
-          servo.write(min);
-        }
-      }        
+        servo.write(min);
+      }
+      else // (dest > max)
+      {
+        servo.write(max);
+      }
     }
     
     void goHome()
