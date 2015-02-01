@@ -11,8 +11,7 @@ class Joint
     Servo servo;  // Internal control object
     
   public:
-    // TODO: Moar constructors?!?  Validation logic?  (Don't use idiotically... it's not a lib yet)
-    Joint(int sPin, int interval, int start=90, int minimum=0, int maximum=180)
+    Joint(int sPin, int interval=1, int start=90, int minimum=0, int maximum=180)
     {
       pin = sPin;
       home = start;
@@ -44,12 +43,19 @@ class Joint
     {
       servo.write(home);
     }
-} *shoulder;
+} *base, *shoulder, *elbow, *wrist, *yaw, *grip;
 
 void setup() 
 {
   Serial.begin(115200);
-  shoulder = new Joint(9, 5, 105, 75, 135);
+  
+  // TODO: Check pin-outs once circuit is actually built
+  base = new Joint(9, 5);
+  elbow = new Joint(8, 2, 150, 45, 135);
+  grip = new Joint(7, 10, 45);
+  shoulder = new Joint(6, 5, 105, 75, 135);
+  wrist = new Joint(5, 3);
+  yaw = new Joint(4, 3);
 }
 
 int smooth(char c)
@@ -67,16 +73,47 @@ void getInput()
 {
   if (Serial.available())
   {
-    // TODO: Use the char as a lookup index
-    switch(Serial.read())
+    Joint* joint;
+    int amount = 0;
+    char move = Serial.read();
+    
+    switch(move)
     {
-      case 's':
-        shoulder->rotate(smooth('s'));
+      case 'b':
+      case 'B':
+        joint = base;
         break;
+      case 'e':
+      case 'E':
+        joint = elbow;
+        break;
+      case 'g':
+      case 'G':
+        joint = grip;
+        break;
+      case 's':
       case 'S':
-        shoulder->rotate(-1 * smooth('S'));
+        joint = shoulder;
+        break;
+      case 'w':
+      case 'W':
+        joint = wrist;
+        break;
+      case 'y':
+      case 'Y':
+        joint = yaw;
         break;
     }
+    
+    if ((move >= 'A') && (move <= 'Z'))
+    {
+      amount = -1 * smooth(move);
+    }
+    else
+    {
+      amount = smooth(move);
+    }
+    joint->rotate(amount);
   }
 }
 
