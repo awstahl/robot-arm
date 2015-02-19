@@ -1,6 +1,19 @@
+/*
+
+TODO: Add proximity sensors that allow the robot to detect the locationn
+of a nearby object and snap at it like a snake.
+
+TODO: Create a 'robot appendage' object, which is a binding of Joint
+objects with physically-defined constraints.
+
+TODO: Incorporate various other sensors to improve robot conntrol.
+(i.e. gyroscopes)
+
+*/
+
 #include <Servo.h> 
 
-// A Joint is a servo mounted at a specific point on the robot arm.
+// A Joint is a servo mounted at a specific point on a robot.
 class Joint
 {
   private:
@@ -11,7 +24,7 @@ class Joint
     Servo servo;  // Internal control object
     
   public:
-    Joint(int sPin, int interval=1, int start=90, int minimum=0, int maximum=180)
+    Joint(int sPin, int interval=1, int start=90, int minimum=0, int maximum=180, int delay=0)
     {
       pin = sPin;
       home = start;
@@ -43,7 +56,27 @@ class Joint
     {
       servo.write(home);
     }
-} *base, *shoulder, *elbow, *wrist, *yaw, *grip;
+};
+
+/*
+  Appdendage modeling...
+  - An appendage is a set of two or more joints, which may or may not have a physical relation.
+  - Movement of the appendage may require coordination of two or more joints
+  - An appendage can provide custom movement interfaces.
+  - An appendage must be able to move to a point in space.
+*/
+class Appendage
+{
+  private:
+    Joint* joints[];
+    
+  public:
+    Appendage(int fake)
+    {
+      fake * 1;
+    }
+};
+
 
 void setup() 
 {
@@ -75,6 +108,7 @@ void getInput()
   {
     Joint* joint;
     int amount = 0;
+    int direction = 1;
     char move = Serial.read();
     
     switch(move)
@@ -107,12 +141,11 @@ void getInput()
     
     if ((move >= 'A') && (move <= 'Z'))
     {
-      amount = -1 * smooth(move);
+      direction = -1;
     }
-    else
-    {
-      amount = smooth(move);
-    }
+    // TODO: Test out the short cirtuit directive...
+    // (move >= 'A') && (move <= 'Z') && (direction = -1)
+    amount = direction * smooth(move);
     joint->rotate(amount);
   }
 }
