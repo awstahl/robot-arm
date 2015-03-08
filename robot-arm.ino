@@ -12,18 +12,21 @@ TODO: Incorporate various other sensors to improve robot conntrol.
 */
 
 #include <Servo.h> 
+#include <stdio.h>
+#include <ctype.h>
 
 // A Joint is a servo mounted at a specific point on a robot.
 class Joint
 {
   private:
-    int pin;   // Arduino pin connected to servo control channel
-    int home;  // Initial position for the servo
-    int step;  // Degrees by which to move servo on a single key press
+    int pin;        // Arduino pin connected to servo control channel
+    int home;       // Initial position for the servo
+    int step;       // Degrees by which to move servo on a single key press
     int min, max;   // Allow for physical boundaries; servo can move 0-180; but that's not necessarily true for a given joint
-    Servo servo;  // Internal control object
+    Servo servo;    // Internal control object
     
   public:
+      
     Joint(int sPin, int interval=1, int start=90, int minimum=0, int maximum=180, int delay=0)
     {
       pin = sPin;
@@ -58,6 +61,16 @@ class Joint
     }
 };
 
+
+// TODO: Serialize & read in at runtime
+Joint* base;
+Joint* elbow;
+Joint* grip;
+Joint* shoulder;
+Joint* wrist;
+Joint* yaw;
+
+
 /*
   Appdendage modeling...
   - An appendage is a set of two or more joints, which may or may not have a physical relation.
@@ -65,20 +78,87 @@ class Joint
   - An appendage can provide custom movement interfaces.
   - An appendage must be able to move to a point in space.
 */
-class Appendage
+//class Appendage
+//{
+//  private:
+//    Joint* joints[];
+
+//    
+//  public:
+//    Appendage(int fake)
+//    {
+
+//    }
+//};
+
+
+class JointManager
 {
+  
   private:
-    Joint* joints[];
+
+    static int smooth(char c)
+    {
+      int i = 1;
+      while(Serial.peek() == c)
+      {
+        Serial.read();
+        i++;
+      }
+      return i;
+    }
+  
+    static Joint* selectJoint(char key)
+    {
+      Joint* joint;
+      switch(tolower(key))
+      {
+        case 'b':
+          joint = base;
+          break;
+        case 'e':
+          joint = elbow;
+          break;
+        case 'g':
+          joint = grip;
+          break;
+        case 's':
+          joint = shoulder;
+          break;
+        case 'w':
+          joint = wrist;
+          break;
+        case 'y':
+          joint = yaw;
+          break;
+        default:
+          joint = 0;
+      }
+      return joint;
+    }
     
   public:
-    Appendage(int fake)
+    
+    static void move(char key)
     {
-      fake * 1;
-    }
+      Joint* joint = selectJoint(key);
+      int amount = 0;
+      int direction = 1;
+
+      if (isupper(key)) 
+      {
+         direction = -1;
+      }
+      amount = direction * smooth(key);
+    
+      if (joint)
+      {
+         joint->rotate(amount);
+      }
+  }
 };
 
-
-void setup() 
+void setup()
 {
   Serial.begin(115200);
   
@@ -91,66 +171,12 @@ void setup()
   yaw = new Joint(4, 3);
 }
 
-int smooth(char c)
-{
-  int i = 1;
-  while(Serial.peek() == c)
-  {
-    Serial.read();
-    i++;
-  }
-  return i;
-}
-
-void getInput()
-{
-  if (Serial.available())
-  {
-    Joint* joint;
-    int amount = 0;
-    int direction = 1;
-    char move = Serial.read();
-    
-    switch(move)
-    {
-      case 'b':
-      case 'B':
-        joint = base;
-        break;
-      case 'e':
-      case 'E':
-        joint = elbow;
-        break;
-      case 'g':
-      case 'G':
-        joint = grip;
-        break;
-      case 's':
-      case 'S':
-        joint = shoulder;
-        break;
-      case 'w':
-      case 'W':
-        joint = wrist;
-        break;
-      case 'y':
-      case 'Y':
-        joint = yaw;
-        break;
-    }
-    
-    if ((move >= 'A') && (move <= 'Z'))
-    {
-      direction = -1;
-    }
-    // TODO: Test out the short cirtuit directive...
-    // (move >= 'A') && (move <= 'Z') && (direction = -1)
-    amount = direction * smooth(move);
-    joint->rotate(amount);
-  }
-}
 
 void loop() 
-{ 
-  getInput();
+{
+  if (Serial.available())
+ {
+    char key = Serial.read();
+    JointManager::move(key);
+ }
 }
