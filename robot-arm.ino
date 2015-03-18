@@ -71,7 +71,7 @@ public:
     write(location);
   }
   
-  int location()
+  byte location()
   {
     return servo.read();
   }
@@ -162,7 +162,7 @@ public:
   {
     Joint* joint = selectJoint(key);
     byte amount = 0;
-    byte direction = 1;
+    int direction = 1;
 
     if ( isupper(key) ) 
     {
