@@ -12,7 +12,6 @@
 
 #include <Servo.h>
 #include <ctype.h>
-#include <string.h>
 
 const byte BASE_PIN = 9;
 const byte ELBOW_PIN = 8;
