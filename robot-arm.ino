@@ -26,14 +26,14 @@ const byte YAW_PIN = 4;
 class Joint
 {
 private:
-  int home;       // Initial position for the servo
-  int step;       // Degrees by which to move servo on a single key press
-  int min, max;   // Allow for physical boundaries; servo can move 0-180; but that's not necessarily true for a given joint
+  byte home;       // Initial position for the servo
+  byte step;       // Degrees by which to move servo on a single key press
+  byte min, max;   // Allow for physical boundaries; servo can move 0-180; but that's not necessarily true for a given joint
   Servo servo;    // Internal control object
   
-  void write(int dest)
+  void write(byte dest)
   {
-    int val;
+    byte val;
     if (dest <= min)
     {
       val = min;
@@ -51,7 +51,7 @@ private:
 
 public:
 
-  Joint(byte pin, int interval=1, int start=90, int minimum=0, int maximum=180)
+  Joint(byte pin, byte interval=1, byte start=90, byte minimum=0, byte maximum=180)
   {
     home = start;
     servo.attach(pin);
@@ -161,8 +161,8 @@ public:
   static void move(char key)
   {
     Joint* joint = selectJoint(key);
-    int amount = 0;
-    int direction = 1;
+    byte amount = 0;
+    byte direction = 1;
 
     if ( isupper(key) ) 
     {
