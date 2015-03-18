@@ -1,5 +1,11 @@
 /*
 
+ No license, no warranty.  Use at your own risk.
+
+*/
+
+/*
+
  TODO: Create a 'robot appendage' object, which is a binding of Joint
  objects with physically-defined constraints.
  
@@ -28,7 +34,7 @@ private:
   byte home;       // Initial position for the servo
   byte step;       // Degrees by which to move servo on a single key press
   byte min, max;   // Allow for physical boundaries; servo can move 0-180; but that's not necessarily true for a given joint
-  Servo servo;    // Internal control object
+  Servo servo;     // Internal control object
   
   void write(byte dest)
   {
@@ -96,7 +102,7 @@ Joint* yaw;
   - Collection of one or more appendages,sensors, and movement interfaces
   - Provides methods for pre-defined sequences
 */
-class Robot
+/*class Robot
 {
 private:
   
@@ -106,7 +112,7 @@ public:
   {
     
   }
-};
+};*/
 
 
 // TODO: Refactor into Robot
@@ -115,9 +121,9 @@ class JointManager
 
 private:
 
-  static int smooth(char c)
+  static byte smooth(char c)
   {
-    int i = 1;
+    byte i = 1;
     while(Serial.peek() == c)
     {
       Serial.read();
