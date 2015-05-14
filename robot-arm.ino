@@ -19,12 +19,12 @@
 #include <Servo.h>
 #include <ctype.h>
 
-const byte BASE_PIN = 9;
-const byte ELBOW_PIN = 8;
+const byte BASE_PIN = 2;
+const byte ELBOW_PIN = 4;
 const byte GRIP_PIN = 7;
-const byte SHOULDER_PIN = 6;
+const byte SHOULDER_PIN = 3;
 const byte WRIST_PIN = 5;
-const byte YAW_PIN = 4;
+const byte YAW_PIN = 6;
 
 
 // A Joint is a servo mounted at a specific point on a robot.
@@ -66,7 +66,7 @@ public:
     max = maximum;
   }
 
-  void rotate(int amount)
+  void rotate(byte amount)
   {
     write(servo.read() + (step * amount));
   }
@@ -166,7 +166,7 @@ public:
   static void move(char key)
   {
     Joint* joint = selectJoint(key);
-    byte amount = 0;
+    int amount = 0;
     int direction = 1;
 
     if ( isupper(key) ) 
