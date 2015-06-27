@@ -36,6 +36,7 @@ private:
   byte min, max;   // Allow for physical boundaries; servo can move 0-180; but that's not necessarily true for a given joint
   Servo servo;     // Internal control object
   
+  // Write a valid value to the arduino pin for the local servo
   void write(byte dest)
   {
     byte val;
@@ -66,21 +67,25 @@ public:
     max = maximum;
   }
 
+  // Rotate the joint by <amount> degrees
   void rotate(byte amount)
   {
     write(servo.read() + (step * amount));
   }
   
+  // Move the joint to a specific location
   void locate(int location)
   {
     write(location);
   }
   
+  // Get the current joint angle
   byte location()
   {
     return servo.read();
   }
 
+  // Return the joint to its home angle
   void goHome()
   {
     write(home);
@@ -101,6 +106,7 @@ Joint* yaw;
   Robot modeling
   - Collection of one or more appendages,sensors, and movement interfaces
   - Provides methods for pre-defined sequences
+  - Use an inverse kinematic subsystem
 */
 /*class Robot
 {
@@ -121,6 +127,7 @@ class JointManager
 
 private:
 
+  // Tally the number of sequential character presses to avoid stuttering
   static byte smooth(char c)
   {
     byte i = 1;
@@ -163,6 +170,7 @@ private:
 
 public:
 
+  // Based on one or more key presses of a single character, move the joint
   static void move(char key)
   {
     Joint* joint = selectJoint(key);
