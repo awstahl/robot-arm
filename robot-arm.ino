@@ -61,10 +61,10 @@ public:
   {
     home = start;
     servo.attach(pin);
-    goHome();		// TODO: Causing startup side effects when pointers are init'ed?
     step = interval;
     min = minimum;
     max = maximum;
+    goHome();
   }
 
   // Rotate the joint by <amount> degrees
