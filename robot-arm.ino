@@ -141,7 +141,7 @@ private:
   static Joint* selectJoint(char key)
   {
     Joint* joint;
-    byte step;       // Degrees by which to move servo on a single key press
+    byte step;       // TODO: Degrees by which to move servo on a single key press; requires testing
     switch(tolower(key))
     {
     case 'b':
