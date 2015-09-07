@@ -194,10 +194,11 @@ void setup()
 {
   Serial.begin(115200);
 
+  // Joint(byte pin, byte interval=1, byte start=90, byte minimum=0, byte maximum=180)
   base = new Joint(BASE_PIN, 5);
-  elbow = new Joint(ELBOW_PIN, 2, 150, 45, 135);
+  elbow = new Joint(ELBOW_PIN, 2, 100, 45, 135);
   grip = new Joint(GRIP_PIN, 10, 45);
-  shoulder = new Joint(SHOULDER_PIN, 5, 105, 75, 135);
+  shoulder = new Joint(SHOULDER_PIN, 5, 105, 45, 135);
   wrist = new Joint(WRIST_PIN, 3);
   yaw = new Joint(YAW_PIN, 3);
 }
