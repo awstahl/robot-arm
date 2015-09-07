@@ -137,6 +137,7 @@ private:
     return i;
   }
 
+  // Ugh... how not to write a mile of c++ to avoid this sort of coupling...
   static Joint* selectJoint(char key)
   {
     Joint* joint;
