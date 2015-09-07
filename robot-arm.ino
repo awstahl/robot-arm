@@ -32,12 +32,11 @@ class Joint
 {
 private:
   byte home;       // Initial position for the servo
-  byte step;       // Degrees by which to move servo on a single key press
   byte min, max;   // Allow for physical boundaries; servo can move 0-180; but that's not necessarily true for a given joint
   Servo servo;     // Internal control object
   
   // Write a valid value to the arduino pin for the local servo
-  void write(byte dest)
+  void write(int dest)
   {
     byte val;
     if (dest <= min)
@@ -57,11 +56,10 @@ private:
 
 public:
 
-  Joint(byte pin, byte interval=1, byte start=90, byte minimum=0, byte maximum=180)
+  Joint(byte pin, byte start=90, byte minimum=0, byte maximum=180)
   {
     home = start;
     servo.attach(pin);
-    step = interval;
     min = minimum;
     max = maximum;
     goHome();
@@ -70,7 +68,7 @@ public:
   // Rotate the joint by <amount> degrees
   void rotate(byte amount)
   {
-    write(servo.read() + (step * amount));
+    write(servo.read() + amount);
   }
   
   // Move the joint to a specific location
@@ -142,6 +140,7 @@ private:
   static Joint* selectJoint(char key)
   {
     Joint* joint;
+    byte step;       // Degrees by which to move servo on a single key press
     switch(tolower(key))
     {
     case 'b':
@@ -194,13 +193,13 @@ void setup()
 {
   Serial.begin(115200);
 
-  // Joint(byte pin, byte interval=1, byte start=90, byte minimum=0, byte maximum=180)
-  base = new Joint(BASE_PIN, 5);
-  elbow = new Joint(ELBOW_PIN, 2, 100, 45, 135);
-  grip = new Joint(GRIP_PIN, 10, 45);
-  shoulder = new Joint(SHOULDER_PIN, 5, 105, 45, 135);
-  wrist = new Joint(WRIST_PIN, 3);
-  yaw = new Joint(YAW_PIN, 3);
+  // Joint(byte pin, byte start=90, byte minimum=0, byte maximum=180)
+  base = new Joint(BASE_PIN);
+  elbow = new Joint(ELBOW_PIN, 100, 45, 135);
+  grip = new Joint(GRIP_PIN, 45);
+  shoulder = new Joint(SHOULDER_PIN, 105, 45, 135);
+  wrist = new Joint(WRIST_PIN);
+  yaw = new Joint(YAW_PIN);
 }
 
 
