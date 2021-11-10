@@ -1,36 +1,63 @@
 /*
 
- No license, no warranty.  Use at your own risk.
+Robot Arm Code
+MIT License
+
+© 2021 Alexander W. Stahl
 
 */
 
-/*
-
- TODO: Create a 'robot appendage' object, which is a binding of Joint
- objects with physically-defined constraints.
- 
- TODO: Add proximity sensors that allow the robot to detect the location
- of a nearby object and snap at it like a snake.
- 
- TODO: Mount an infrared beam on the end of the grippers
- 
- */
 
 #include <Servo.h>
 #include <ctype.h>
 
-const byte BASE_PIN = 2;
-const byte ELBOW_PIN = 4;
-const byte GRIP_PIN = 7;
-const byte SHOULDER_PIN = 3;
-const byte WRIST_PIN = 5;
-const byte YAW_PIN = 6;
+
+// Servo pins
+const byte BASE_PIN = 6;
+const byte ELBOW_PIN = 8;
+const byte GRIP_PIN = 5;
+const byte SHOULDER_PIN = 7;
+const byte WRIST_PIN = 4;
+const byte YAW_PIN = 3;
+
+// Sensor pins
+const byte MIC_A_PIN = A5;
+const byte MIC_D_PIN = 9;
+
+
+// A sensor is a, well, sensor to provide input to the robot
+class Sensor
+{
+  private:
+  byte pin;
+  bool digital;
+
+  public:
+
+  Sensor(byte sensorPin, bool digi=1)
+  {
+    pin = sensorPin;
+    digital = digi;
+  }
+
+  int read()
+  {
+    if (digital)
+    {
+      return digitalRead(pin);
+    }
+    else
+    {
+      return analogRead(pin);
+    }
+  }
+};
 
 
 // A Joint is a servo mounted at a specific point on a robot.
 class Joint
 {
-private:
+  private:
   byte home;       // Initial position for the servo
   byte min, max;   // Allow for physical boundaries; servo can move 0-180; but that's not necessarily true for a given joint
   Servo servo;     // Internal control object
@@ -54,7 +81,7 @@ private:
     servo.write(val);
   }
 
-public:
+  public:
 
   Joint(byte pin, byte start=90, byte minimum=0, byte maximum=180)
   {
@@ -65,25 +92,21 @@ public:
     goHome();
   }
 
-  // Rotate the joint by <amount> degrees
-  void rotate(byte amount)
+  void rotate(int amount)
   {
     write(servo.read() + amount);
   }
   
-  // Move the joint to a specific location
   void locate(int location)
   {
     write(location);
   }
   
-  // Get the current joint angle
   byte location()
   {
     return servo.read();
   }
 
-  // Return the joint to its home angle
   void goHome()
   {
     write(home);
@@ -91,7 +114,7 @@ public:
 };
 
 
-// TODO: Serialize & read in at runtime in a manager
+// TODO: Can these be serialized & read in at runtime in a manager?
 Joint* base;
 Joint* elbow;
 Joint* grip;
@@ -100,115 +123,139 @@ Joint* wrist;
 Joint* yaw;
 
 
-/*
-  Robot modeling
-  - Collection of one or more appendages,sensors, and movement interfaces
-  - Provides methods for pre-defined sequences
-  - Use an inverse kinematic subsystem
-*/
-/*class Robot
+class Kinematics
 {
-private:
-  
-public:
+  private:
 
-  void move(char key)
+  public:
+
+  Kinematics()
   {
     
   }
-};*/
+};
 
-
-// TODO: Refactor into Robot
-class JointManager
+/*
+ * The Robot is essentially a collection of subsystems to:
+ * - receive input from sensors 
+ * - evaluate input
+ * - react in the form of movement
+ * - react with personality
+ */
+class Robot
 {
+  private:
+  // TODO: should consist of a set of subsystems which don't necessarily exist yet
+    
+  public:
 
-private:
-
-  // Tally the number of sequential character presses to avoid stuttering
-  static byte smooth(char c)
+  Robot()
   {
-    byte i = 1;
-    while(Serial.peek() == c)
-    {
-      Serial.read();
-      i++;
-    }
-    return i;
+    // TODO: implement
   }
 
-  // Ugh... how not to write a mile of c++ to avoid this sort of coupling...
-  static Joint* selectJoint(char key)
+
+  // Should accept a struct of sensor values (when that struct exists...)
+  void act()
   {
-    Joint* joint;
-    byte step;       // TODO: Degrees by which to move servo on a single key press; requires testing
-    switch(tolower(key))
-    {
-    case 'b':
-      joint = base;
-      break;
-    case 'e':
-      joint = elbow;
-      break;
-    case 'g':
-      joint = grip;
-      break;
-    case 's':
-      joint = shoulder;
-      break;
-    case 'w':
-      joint = wrist;
-      break;
-    case 'y':
-      joint = yaw;
-      break;
-    default:
-      joint = 0;
-    }
-    return joint;
-  }
-
-public:
-
-  // Based on one or more key presses of a single character, move the joint
-  static void move(char key)
-  {
-    Joint* joint = selectJoint(key);
-    int amount = 0;
-    int direction = 1;
-
-    if ( isupper(key) ) 
-    {
-      direction = -1;
-    }
-    amount = direction * smooth(key);
-
-    if (joint)
-    {
-      joint->rotate(amount);
-    }
+    // TODO: implement
   }
 };
+
 
 void setup()
 {
   Serial.begin(115200);
 
-  // Joint(byte pin, byte start=90, byte minimum=0, byte maximum=180)
   base = new Joint(BASE_PIN);
   elbow = new Joint(ELBOW_PIN, 100, 45, 135);
   grip = new Joint(GRIP_PIN, 45);
   shoulder = new Joint(SHOULDER_PIN, 105, 45, 135);
   wrist = new Joint(WRIST_PIN);
   yaw = new Joint(YAW_PIN);
+
+  base->goHome();
+  delay(250);
+
+  shoulder->goHome();
+  delay(250);
+
+  elbow->goHome();
+  delay(250);
+
+  wrist->goHome();
+  delay(250);
+
+  yaw->goHome();
+  delay(250);
+
+  grip->goHome();
+  delay(250);
 }
 
 
 void loop() 
 {
-  if (Serial.available())
-  {
-    JointManager::move(Serial.read());
-  }
+//  smoke();
+  wrist->rotate(60);
+  delay(500);
+  grip->rotate(45);
+  delay(500);
+  wrist->rotate(-60);
+  delay(500);
+  grip->rotate(-45);
+  delay(500);
 }
 
+
+void smoke()
+{
+  Serial.println("Moving base");
+  base->rotate(10);
+  delay(500);
+
+  Serial.println("Moving shoulder");
+  shoulder->rotate(10);
+  delay(500);
+
+  Serial.println("Moving elbow");
+  elbow->rotate(5);
+  delay(500);
+
+  Serial.println("Moving wrist");
+  wrist->rotate(10);
+  delay(500);
+
+  Serial.println("Moving yaw");
+  yaw->rotate(10);
+  delay(500);
+
+  Serial.println("Moving grip");
+  grip->rotate(5);
+  delay(2500);
+
+  // Reverse back to start:
+  Serial.println("Moving base back");
+  base->rotate(-10);
+  delay(500);
+
+  Serial.println("Moving shoulder back");
+  shoulder->rotate(-20);
+  delay(500);
+
+  Serial.println("Moving elbow back");
+  elbow->rotate(-25);
+  delay(500);
+
+  Serial.println("Moving wrist back");
+  wrist->rotate(-20);
+  delay(500);
+
+  Serial.println("Moving yaw back");
+  yaw->rotate(-20);
+  delay(500);
+
+  Serial.println("Moving grip back");
+  grip->rotate(-5);
+  delay(2500);
+}
