@@ -3,12 +3,12 @@
 Robot Arm Code
 MIT License
 
-© 2021 Alexander W. Stahl
+© 2022 Alexander W. Stahl
 
 */
 
-
 #include <Servo.h>
+#include <SharpIR.h>
 #include <ctype.h>
 
 
@@ -21,35 +21,57 @@ const byte WRIST_PIN = 4;
 const byte YAW_PIN = 3;
 
 // Sensor pins
-const byte MIC_A_PIN = A5;
-const byte MIC_D_PIN = 9;
-
+const byte RANGE_L = A0;
+const byte RANGE_S = A1;
 
 // A sensor is a, well, sensor to provide input to the robot
-class Sensor
+// TODO: historical values & current readings in same class?
+class RangeSensor
 {
   private:
-  byte pin;
-  bool digital;
+  SharpIR* sensor;
+  int minimum, maximum, count, *values;
+  long sum;
 
   public:
 
-  Sensor(byte sensorPin, bool digi=1)
+  RangeSensor(byte pin, int type)
   {
-    pin = sensorPin;
-    digital = digi;
+    sensor = new SharpIR(pin, type);
+    minimum = maximum = sum = count = 0;
   }
 
-  int read()
+  uint8_t read()
   {
-    if (digital)
+    uint8_t distance = sensor->distance();
+//    values[count] = distance;
+    count++;
+    sum += distance;
+
+    if (distance > maximum)
     {
-      return digitalRead(pin);
+      maximum = distance;
     }
-    else
+    if (distance < minimum)
     {
-      return analogRead(pin);
+      minimum = distance;
     }
+    return distance;
+  }
+
+  byte getAverage()
+  {
+    return (sum / count);
+  }
+
+  byte getCount()
+  {
+    return count;
+  }
+
+  long getSum()
+  {
+    return sum;
   }
 };
 
@@ -63,7 +85,7 @@ class Joint
   Servo servo;     // Internal control object
   
   // Write a valid value to the arduino pin for the local servo
-  void write(int dest)
+  void write(byte dest)
   {
     byte val;
     if (dest <= min)
@@ -89,7 +111,7 @@ class Joint
     servo.attach(pin);
     min = minimum;
     max = maximum;
-    goHome();
+    reset();
   }
 
   void rotate(int amount)
@@ -97,7 +119,7 @@ class Joint
     write(servo.read() + amount);
   }
   
-  void locate(int location)
+  void locate(byte location)
   {
     write(location);
   }
@@ -107,7 +129,7 @@ class Joint
     return servo.read();
   }
 
-  void goHome()
+  void reset()
   {
     write(home);
   }
@@ -122,18 +144,10 @@ Joint* shoulder;
 Joint* wrist;
 Joint* yaw;
 
+// TODO: How to manage the range sensors?
+RangeSensor* lrange;
+RangeSensor* srange;
 
-class Kinematics
-{
-  private:
-
-  public:
-
-  Kinematics()
-  {
-    
-  }
-};
 
 /*
  * The Robot is essentially a collection of subsystems to:
@@ -145,20 +159,18 @@ class Kinematics
 class Robot
 {
   private:
-  // TODO: should consist of a set of subsystems which don't necessarily exist yet
+  // TODO
     
   public:
 
   Robot()
   {
-    // TODO: implement
+    // TODO
   }
 
-
-  // Should accept a struct of sensor values (when that struct exists...)
   void act()
   {
-    // TODO: implement
+    // TODO
   }
 };
 
@@ -173,89 +185,115 @@ void setup()
   shoulder = new Joint(SHOULDER_PIN, 105, 45, 135);
   wrist = new Joint(WRIST_PIN);
   yaw = new Joint(YAW_PIN);
-
-  base->goHome();
-  delay(250);
-
-  shoulder->goHome();
-  delay(250);
-
-  elbow->goHome();
-  delay(250);
-
-  wrist->goHome();
-  delay(250);
-
-  yaw->goHome();
-  delay(250);
-
-  grip->goHome();
-  delay(250);
+  lrange = new RangeSensor(RANGE_L, 1080);
+//  srange = new RangeSensor(RANGE_S, 430);
 }
 
 
+int reading;
 void loop() 
 {
-//  smoke();
-  wrist->rotate(60);
-  delay(500);
-  grip->rotate(45);
-  delay(500);
-  wrist->rotate(-60);
-  delay(500);
-  grip->rotate(-45);
-  delay(500);
+  Serial.print("Long range reading: ");
+  reading = lrange->read();
+  Serial.println(reading);
+  if (reading <= 81)
+  {
+    if (reading < 20)
+    {
+      snake();
+      delay(250);
+    }
+    else if (reading < 40)
+    {
+      headbang();
+      delay(250);
+    }
+    else
+    {
+      shake();
+      delay(250);
+    }
+  }
+  else
+  {
+    tweak();
+  }
+  base->reset();
+  shoulder->reset();
+  elbow->reset();
+  wrist->reset();
+  yaw->reset();
+  grip->reset();
+  delay(250);
+  Serial.print("Long range samples: ");
+  Serial.println(lrange->getCount());
+  Serial.print("Long range sum: ");
+  Serial.println(lrange->getSum());
+  Serial.print("Long range average: ");
+  Serial.println(lrange->getAverage());
+  delay(2500);
+}
+
+void headbang()
+{
+  for (int j=0; j<10; j++)
+  {
+    for (int i=0; i<5; i++)
+    {
+      shoulder->rotate(5);
+      wrist->rotate(30);
+      delay(50);
+    }
+    
+    for (int i=0; i<5; i++)
+    {
+      shoulder->rotate(-5);
+      wrist->rotate(-30);
+      delay(50);
+    }
+  }
 }
 
 
-void smoke()
+void shake()
 {
-  Serial.println("Moving base");
-  base->rotate(10);
+  for (int i=0; i<5; i++)
+  {
+    base->rotate(45);
+    yaw->rotate(60);
+    grip->rotate(45);
+    delay(200);
+    base->rotate(-45);
+    yaw->rotate(-60);
+    grip->rotate(-45);
+    delay(200);
+  }
+}
+
+
+void snake()
+{
+  shoulder->locate(100);
+  elbow->locate(45);
+  wrist->locate(10);
+  delay(1000);
+
+  for (int i=0; i<5; i++)
+  {
+    base->rotate(60);
+    delay(500);
+    base->rotate(-60);
+    delay(500);
+  }
+}
+
+
+void tweak()
+{
+  yaw->rotate(25);
+  grip->rotate(45);
   delay(500);
-
-  Serial.println("Moving shoulder");
-  shoulder->rotate(10);
-  delay(500);
-
-  Serial.println("Moving elbow");
-  elbow->rotate(5);
-  delay(500);
-
-  Serial.println("Moving wrist");
-  wrist->rotate(10);
-  delay(500);
-
-  Serial.println("Moving yaw");
-  yaw->rotate(10);
-  delay(500);
-
-  Serial.println("Moving grip");
-  grip->rotate(5);
-  delay(2500);
-
-  // Reverse back to start:
-  Serial.println("Moving base back");
-  base->rotate(-10);
-  delay(500);
-
-  Serial.println("Moving shoulder back");
-  shoulder->rotate(-20);
-  delay(500);
-
-  Serial.println("Moving elbow back");
-  elbow->rotate(-25);
-  delay(500);
-
-  Serial.println("Moving wrist back");
-  wrist->rotate(-20);
-  delay(500);
-
-  Serial.println("Moving yaw back");
-  yaw->rotate(-20);
-  delay(500);
-
-  Serial.println("Moving grip back");
-  grip->rotate(-5);
-  delay(2500);
+  yaw->rotate(-25);
+  grip->rotate(-45);
+  delay(1000);
 }
