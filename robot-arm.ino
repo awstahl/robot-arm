@@ -10,6 +10,7 @@ MIT License
 #include <Servo.h>
 #include <SharpIR.h>
 #include <ctype.h>
+#include <ArduinoLog.h>
 
 
 // Servo pins
@@ -24,47 +25,38 @@ const byte YAW_PIN = 3;
 const byte RANGE_L = A0;
 const byte RANGE_S = A1;
 
-// A sensor is a, well, sensor to provide input to the robot
-// TODO: historical values & current readings in same class?
-class RangeSensor
+class Sensor
 {
-  private:
-  SharpIR* sensor;
+  protected:
   int minimum, maximum, count, *values;
   long sum;
 
-  public:
-
-  RangeSensor(byte pin, int type)
+  void store()
   {
-    sensor = new SharpIR(pin, type);
-    minimum = maximum = sum = count = 0;
-  }
-
-  uint8_t read()
-  {
-    uint8_t distance = sensor->distance();
-//    values[count] = distance;
+    values[count] = value;
     count++;
-    sum += distance;
+    sum += value;
 
-    if (distance > maximum)
+    if (value > maximum)
     {
-      maximum = distance;
+      maximum = value;
     }
-    if (distance < minimum)
+    if (value < minimum)
     {
-      minimum = distance;
+      minimum = value;
     }
-    return distance;
   }
 
-  byte getAverage()
+
+  public:
+  uint8_t value;
+
+  int getAverage()
   {
     return (sum / count);
   }
 
-  byte getCount()
+  int getCount()
   {
     return count;
   }
@@ -72,6 +64,32 @@ class RangeSensor
   long getSum()
   {
     return sum;
+  }
+};
+
+
+// A range sensor is a device to measure distance to an object
+class RangeSensor : public Sensor
+{
+  private:
+  SharpIR* sensor;
+  byte pin;
+
+  public:
+
+  RangeSensor(byte pin, int type)
+  {
+    pin = pin;
+    sensor = new SharpIR(pin, type);
+    minimum = maximum = sum = count = 0;
+  }
+
+  uint8_t read()
+  {
+    value = sensor->distance();
+    Log.trace("Range Sensor on pin %d reads at: %d" NL, pin, value);
+    store();
+    return value;
   }
 };
 
