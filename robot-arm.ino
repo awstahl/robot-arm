@@ -149,32 +149,6 @@ RangeSensor* lrange;
 RangeSensor* srange;
 
 
-/*
- * The Robot is essentially a collection of subsystems to:
- * - receive input from sensors 
- * - evaluate input
- * - react in the form of movement
- * - react with personality
- */
-class Robot
-{
-  private:
-  // TODO
-    
-  public:
-
-  Robot()
-  {
-    // TODO
-  }
-
-  void act()
-  {
-    // TODO
-  }
-};
-
-
 void setup()
 {
   Serial.begin(115200);
@@ -218,12 +192,7 @@ void loop()
   {
     tweak();
   }
-  base->reset();
-  shoulder->reset();
-  elbow->reset();
-  wrist->reset();
-  yaw->reset();
-  grip->reset();
+  reset();
   delay(250);
   Serial.print("Long range samples: ");
   Serial.println(lrange->getCount());
@@ -232,6 +201,22 @@ void loop()
   Serial.print("Long range average: ");
   Serial.println(lrange->getAverage());
   delay(2500);
+}
+
+
+/* TODO: These funcs are the major pain points...
+ *  - series of looped sequential movements
+ *  - how to model this behavior programmatically?
+*/
+
+void reset()
+{
+  base->reset();
+  shoulder->reset();
+  elbow->reset();
+  wrist->reset();
+  yaw->reset();
+  grip->reset();
 }
 
 void headbang()
