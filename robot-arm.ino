@@ -212,12 +212,9 @@ void loop()
   }
   reset();
   delay(250);
-  Serial.print("Long range samples: ");
-  Serial.println(lrange->getCount());
-  Serial.print("Long range sum: ");
-  Serial.println(lrange->getSum());
-  Serial.print("Long range average: ");
-  Serial.println(lrange->getAverage());
+  Log.trace("Long range samples: %d" NL, lrange->getCount());
+  Log.trace("Long range sum: %d" NL, lrange->getSum());
+  Log.trace("Long range average: %d" NL, lrange->getAverage());
   delay(2500);
 }
 
