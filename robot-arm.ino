@@ -170,6 +170,8 @@ RangeSensor* srange;
 void setup()
 {
   Serial.begin(115200);
+  Log.begin(LOG_LEVEL_VERBOSE, &Serial);
+  Log.verbose("Started Logger; proceeding with setup()" NL);
 
   base = new Joint(BASE_PIN);
   elbow = new Joint(ELBOW_PIN, 100, 45, 135);
@@ -178,24 +180,27 @@ void setup()
   wrist = new Joint(WRIST_PIN);
   yaw = new Joint(YAW_PIN);
   lrange = new RangeSensor(RANGE_L, 1080);
-//  srange = new RangeSensor(RANGE_S, 430);
+  srange = new RangeSensor(RANGE_S, 430);
 }
 
 
-int reading;
+int l_reading;
+int s_reading;
 void loop() 
 {
-  Serial.print("Long range reading: ");
-  reading = lrange->read();
-  Serial.println(reading);
-  if (reading <= 81)
+  l_reading = lrange->read();
+  s_reading = srange->read();
+  Log.trace("Long range reading: %d" NL, l_reading);
+  Log.trace("Short range reading: %d" NL, s_reading);
+
+  if (l_reading <= 81)
   {
-    if (reading < 20)
+    if (l_reading < 20)
     {
       snake();
       delay(250);
     }
-    else if (reading < 40)
+    else if (l_reading < 40)
     {
       headbang();
       delay(250);
